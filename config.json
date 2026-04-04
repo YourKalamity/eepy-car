@@ -1,0 +1,22 @@
+{
+    "camera" : {
+        "index" : 0
+    },  
+    "thresholds" : {
+        "ear": 0.20,
+        "mar": 0.60,
+        "gaze_degrees": 20.0,
+        "head_distance_metres" : 0.4
+    },
+    "apriltag" : {
+        "family" : "tag36h11",
+        "tag_size_metres" : 0.055,
+        "headrest_tag_id": 250
+    },
+    "output": {
+        "log_events": true,
+        "log_path": "logs/events-{date}.log",
+        "show_overlay": true,
+        "audio_alert": true
+    }
+}
