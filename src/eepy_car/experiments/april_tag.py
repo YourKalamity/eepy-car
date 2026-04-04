@@ -75,7 +75,7 @@ def draw_axes(img: np.ndarray,
         [0, 0, 0],
         [length, 0, 0],
         [0, length, 0],
-        [0, 0, length],
+        [0, 0, -length],
     ], dtype=np.float32)
 
     projected, _ = cv2.projectPoints(axis_pts, rvec, tvec, K, dist)
