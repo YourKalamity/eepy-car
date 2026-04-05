@@ -5,6 +5,7 @@ import pytest
 
 from eepy_car.drowsiness.face import load_landmarker_model, get_landmarks
 from eepy_car.drowsiness.ear import LEFT_EYE, ear, avg_ear
+from eepy_car.drowsiness.mar import mar
 
 MODEL_PATH = Path(__file__).parent.parent / "models" / "face_landmarker.task"
 
@@ -67,6 +68,39 @@ def both_eyes_open_landmarks():
     return landmarks
 
 
+@pytest.fixture
+def open_mouth_landmarks():
+    landmarks = [(0.0, 0.0)] * 478
+    landmarks = list(landmarks)
+    landmarks[78] = (0.0, 0.0)
+    landmarks[308] = (2.0, 0.0)
+    landmarks[13] = (1.0, 1.0)
+    landmarks[14] = (1.0, -1.0)
+    return landmarks
+
+
+@pytest.fixture
+def closed_mouth_landmarks():
+    landmarks = [(0.0, 0.0)] * 478
+    landmarks = list(landmarks)
+    landmarks[78] = (0.0, 0.0)
+    landmarks[308] = (2.0, 0.0)
+    landmarks[13] = (1.0, 0.0)
+    landmarks[14] = (1.0, 0.0)
+    return landmarks
+
+
+@pytest.fixture
+def zero_width_mouth_landmarks():
+    landmarks = [(0.0, 0.0)] * 478
+    landmarks = list(landmarks)
+    landmarks[78] = (1.0, 0.0)
+    landmarks[308] = (1.0, 0.0)
+    landmarks[13] = (1.0, 1.0)
+    landmarks[14] = (1.0, -1.0)
+    return landmarks
+
+
 class TestFaceFunctions:
 
     def test_load_landmarker_model_successfully(self, landmarker):
@@ -85,6 +119,8 @@ class TestFaceFunctions:
 
     # TODO Add test cases for actual face scanning
 
+
+class TestEAR:
     def test_ear_open_eye(self, open_eye_landmarks):
         """Should return EAR ~= 1.0 for an open eye"""
         result = ear(open_eye_landmarks, LEFT_EYE)
@@ -96,13 +132,30 @@ class TestFaceFunctions:
         assert result == pytest.approx(0.0, abs=1e-6)
 
     def test_ear_returns_zero_when_horizontal_distance_is_zero(self, open_eye_landmarks):
-        """Should return 0.0 when left and right corners overlap."""
+        """Should return 0.0 when left and right corners overlap"""
         open_eye_landmarks[362] = (1.0, 0.0)
         open_eye_landmarks[263] = (1.0, 0.0)
         result = ear(open_eye_landmarks, LEFT_EYE)
         assert result == 0.0
 
     def test_avg_ear_both_eyes_open(self, both_eyes_open_landmarks):
-        """Should return 1.0 when both eyes are fully open."""
+        """Should return 1.0 when both eyes are fully open"""
         result = avg_ear(both_eyes_open_landmarks)
         assert result == pytest.approx(1.0, abs=1e-4)
+
+
+class TestMAR:
+    def test_mar_mouth_open(self, open_mouth_landmarks):
+        """Should return 1.0 when mouth is open"""
+        result = mar(open_mouth_landmarks)
+        assert pytest.approx(result, abs=1e-4) == 1.0
+
+    def test_mar_mouth_closed(self, closed_mouth_landmarks):
+        """Should return 0.0 for a closed mouth"""
+        result = mar(closed_mouth_landmarks)
+        assert result == pytest.approx(0.0, abs=1e-6)
+
+    def test_mar_zero_width(self, zero_width_mouth_landmarks):
+        """Should return 0.0 when mouth is zero width"""
+        result = mar(zero_width_mouth_landmarks)
+        assert result == 0.0
