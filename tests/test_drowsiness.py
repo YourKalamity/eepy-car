@@ -57,7 +57,7 @@ def both_eyes_open_landmarks():
     landmarks[380] = (0.5, -1.0)
 
     # Right eye
-    landmarks[33]  = (0.0, 0.0)
+    landmarks[33] = (0.0, 0.0)
     landmarks[160] = (0.5, 1.0)
     landmarks[158] = (1.5, 1.0)
     landmarks[133] = (2.0, 0.0)
