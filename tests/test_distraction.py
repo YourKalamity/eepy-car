@@ -11,7 +11,7 @@ from eepy_car.distraction.apriltag import (
     tag_object_points,
 )
 
-CALIBRATION_PATH = Path(__file__).parent / "assets" / "calibration_output" / "calibration.npz"
+CALIBRATION_PATH = Path(__file__).parent / "assets" / "test_calibration_output" / "calibration.npz"
 
 
 @pytest.fixture
