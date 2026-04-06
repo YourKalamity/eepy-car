@@ -3,7 +3,7 @@ import numpy as np
 from pathlib import Path
 import pytest
 
-from eepy_car.drowsiness.face import load_landmarker_model, get_landmarks
+from eepy_car.drowsiness.face import load_landmarker_model, get_face_data
 from eepy_car.drowsiness.ear import LEFT_EYE, ear, avg_ear
 from eepy_car.drowsiness.mar import mar
 
@@ -114,7 +114,7 @@ class TestFaceFunctions:
     def test_get_landmarks_returns_none_on_blank_frame(self, landmarker):
         """Should return None when no face is present in the frame."""
         blank_frame = np.zeros((480, 640, 3), dtype=np.uint8)
-        result = get_landmarks(landmarker, blank_frame)
+        result = get_face_data(landmarker, blank_frame)
         assert result is None
 
     # TODO Add test cases for actual face scanning
