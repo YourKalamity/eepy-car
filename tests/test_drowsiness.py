@@ -115,7 +115,7 @@ class TestFaceFunctions:
         """Should return None when no face is present in the frame."""
         blank_frame = np.zeros((480, 640, 3), dtype=np.uint8)
         result = get_face_data(landmarker, blank_frame)
-        assert result is None
+        assert result == (None, None)
 
     # TODO Add test cases for actual face scanning
 

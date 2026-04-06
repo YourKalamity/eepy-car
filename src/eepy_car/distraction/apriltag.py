@@ -10,7 +10,7 @@ APRILTAG_DICTS = {
 }
 
 
-def build_detector(family: str) -> cv2.aruco.ArucoDetector:
+def build_tag_detector(family: str) -> cv2.aruco.ArucoDetector:
     """Builds an ArucoDetector for the given AprilTag family
 
     Args:
@@ -101,10 +101,10 @@ def tag_object_points(tag_size: float) -> np.ndarray:
     ], dtype=np.float64)
 
 
-def estimate_pose(corners: np.ndarray,
-                  object_points: np.ndarray,
-                  camera_matrix: np.ndarray,
-                  dist: np.ndarray) -> tuple[np.ndarray, np.ndarray] | None:
+def estimate_tag_pose(corners: np.ndarray,
+                      object_points: np.ndarray,
+                      camera_matrix: np.ndarray,
+                      dist: np.ndarray) -> tuple[np.ndarray, np.ndarray] | None:
     """Runs solvePnP on a single tag's corners.
 
     Returns (rvec, tvec) or None if pose estimation fails.

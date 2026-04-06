@@ -5,18 +5,19 @@ from pathlib import Path
 
 from eepy_car.distraction.apriltag import (
     APRILTAG_DICTS,
-    build_detector,
+    build_tag_detector,
     load_camera_calibration,
     detect_tags,
     tag_object_points,
 )
 
-CALIBRATION_PATH = Path(__file__).parent / "assets" / "test_calibration_output" / "calibration.npz"
+CALIBRATION_PATH = Path(__file__).parent / "assets" / \
+    "test_calibration_output" / "calibration.npz"
 
 
 @pytest.fixture
 def detector():
-    return build_detector("tag36h11")
+    return build_tag_detector("tag36h11")
 
 
 @pytest.fixture
@@ -38,12 +39,13 @@ class TestBuildDetector:
     def test_build_detector_invalid_family(self):
         """Should raise ValueError for an unknown family."""
         with pytest.raises(ValueError):
-            build_detector("not_a_family")
+            build_tag_detector("not_a_family")
 
     def test_build_detector_all_valid_families(self):
         """Should successfully build a detector for every supported family."""
         for family in APRILTAG_DICTS:
-            assert isinstance(build_detector(family), cv2.aruco.ArucoDetector)
+            assert isinstance(build_tag_detector(
+                family), cv2.aruco.ArucoDetector)
 
 
 class TestLoadCameraCalibration:
