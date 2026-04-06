@@ -1,9 +1,10 @@
-from .apriltag import build_detector, load_camera_calibration, detect_tags, tag_object_points, estimate_pose
+from .gaze import compute_gaze_and_pose_diff
 
 __all__ = [
     "build_detector",
     "load_camera_calibration",
     "detect_tags",
     "tag_object_points",
-    "estimate_pose"
+    "estimate_tag_pose",
+    "compute_gaze_and_pose_diff"
 ]

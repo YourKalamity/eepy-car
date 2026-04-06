@@ -32,7 +32,7 @@ def load_landmarker_model(model_path: str | Path):
     return vision.FaceLandmarker.create_from_options(options)
 
 
-def get_face_data(landmarker, frame_bgr: np.ndarray) -> list[tuple[float, float]] | None:
+def get_face_data(landmarker, frame_bgr: np.ndarray) -> tuple[list[tuple[float, float]] | None, np.ndarray | None]:
     """Runs face landmark detection on a single BGR frame.
 
     Converts the frame to RGB, runs the MediaPipe landmarker, and returns
@@ -52,10 +52,16 @@ def get_face_data(landmarker, frame_bgr: np.ndarray) -> list[tuple[float, float]
     result = landmarker.detect(mp_image)
 
     if not result.face_landmarks:
-        return None
+        return None, None
 
     landmarks = result.face_landmarks[0]
-    return [
+    pixel_landmarks = [
         (landmark.x * width, landmark.y * height)
         for landmark in landmarks
     ]
+
+    pose_matrix = None
+    if result.facial_transformation_matrixes:
+        pose_matrix = np.array(result.facial_transformation_matrixes[0])
+
+    return pixel_landmarks, pose_matrix
