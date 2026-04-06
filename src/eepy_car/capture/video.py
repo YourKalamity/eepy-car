@@ -39,3 +39,27 @@ def read_frame(cap: cv2.VideoCapture) -> tuple[bool, cv2.typing.MatLike]:
         tuple[bool, MatLike]: Success flag and the frame. Frame is None if unsuccessful.
     """
     return cap.read()
+
+
+class CaptureManager:
+    def __init__(self, camera_index):
+        """Initialize the video capture object
+        Args:
+            camera_index (int): Index of the camera device to use for video capture.
+        """
+
+        self.camera_index = camera_index
+
+    def __enter__(self):
+        """Open the camera capture stream and return the active capture object
+        Initializes the camera capture using the configured ``camera_index``
+        stores the resulting handle on ``self.cap``, and returns it for use
+        within a context manager block
+        Returns:
+            Any: The initialized camera capture object returned by ``start_capture``.
+        """
+        self.cap = start_capture(self.camera_index)
+        return self.cap
+
+    def __exit__(self, exc_type, exc, tb):
+        release_capture(self.cap)
