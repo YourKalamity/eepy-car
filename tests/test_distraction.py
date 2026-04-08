@@ -11,6 +11,12 @@ from eepy_car.distraction.apriltag import (
     tag_object_points,
 )
 
+from eepy_car.distraction.gaze import (
+        compute_gaze_and_pose_diff,
+        gaze_offset_degrees,
+        head_tag_distance,
+)
+
 CALIBRATION_PATH = Path(__file__).parent / "assets" / \
     "test_calibration_output" / "calibration.npz"
 
@@ -75,3 +81,87 @@ class TestDetectTags:
         blank_frame = np.zeros((480, 640), dtype=np.uint8)
         result = detect_tags(detector, blank_frame)
         assert isinstance(result, dict)
+
+
+class TestGaze:
+
+    def test_gaze_offset_returns_none_on_zero_forward_vector(self):
+        """Should return None when there is no forward vector"""
+        pose_matrix = np.eye(4, dtype=float)
+        pose_matrix[:3, 2] = np.array([0.0, 0.0, 0.0])
+        rvec = np.zeros((3, 1), dtype=float)
+
+        assert gaze_offset_degrees(pose_matrix, rvec) is None
+
+    def test_gaze_offset_zero_when_aligned_with_tag_axes(self):
+        """Should give a yaw and pitch of 0 when head aligned with tag"""
+        pose_matrix = np.eye(4, dtype=float)
+        pose_matrix[:3, 2] = np.array([0.0, 0.0, 1.0])
+        rvec = np.zeros((3, 1), dtype=float)
+
+        result = gaze_offset_degrees(pose_matrix, rvec)
+        if result is not None:
+            yaw, pitch = result
+            assert yaw == pytest.approx(0.0, abs=1e-6)
+            assert pitch == pytest.approx(0.0, abs=1e-6)
+
+    def test_gaze_offset_positive_yaw_when_forward_points_to_tag_right(self):
+        """Should give a positive yaw when the head is facing right"""
+        pose_matrix = np.eye(4, dtype=float)
+        pose_matrix[:3, 2] = np.array([1.0, 0.0, 0.0])
+        rvec = np.zeros((3, 1), dtype=float)
+
+        result = gaze_offset_degrees(pose_matrix, rvec)
+        if result is not None:
+            yaw, pitch = result
+            assert yaw == pytest.approx(90.0, abs=1e-6)
+            assert pitch == pytest.approx(0.0, abs=1e-6)
+
+    def test_gaze_offset_positive_pitch_when_forward_points_to_tag_up(self):
+        """Should give a positive pitch when head is facing up"""
+        pose_matrix = np.eye(4, dtype=float)
+        pose_matrix[:3, 2] = np.array(
+            [0.0, 1.0, 0.0]) 
+        rvec = np.zeros((3, 1), dtype=float)
+
+        result = gaze_offset_degrees(pose_matrix, rvec)
+        if result is not None:
+            yaw, pitch = result
+            assert yaw == pytest.approx(0.0, abs=1e-6)
+            assert pitch == pytest.approx(90.0, abs=1e-6)
+
+    def test_head_tag_distance_computes_euclidean_distance(self):
+        """Should calculate the correct distance between head and tag"""
+        pose_matrix = np.eye(4, dtype=float)
+        pose_matrix[:3, 3] = np.array([1.0, 2.0, 3.0])
+        tvec = np.array([1.0, 2.0, 6.0], dtype=float)
+
+        distance = head_tag_distance(pose_matrix, tvec)
+
+        assert distance == pytest.approx(3.0, abs=1e-7)
+
+    def test_head_tag_distance_supports_opencv_tvec_shape(self):
+        pose_matrix = np.eye(4, dtype=float)
+        pose_matrix[:3, 3] = np.array([0.0, 0.0, 0.0])
+        tvec = np.array([[[1.0, 2.0, 2.0]]], dtype=float)
+
+        distance = head_tag_distance(pose_matrix, tvec)
+
+        assert distance == pytest.approx(3.0, abs=1e-7)
+
+    def test_compute_gaze_and_pose_diff_returns_expected_tuple(self):
+        """Checks function returns proper tuple"""
+        pose_matrix = np.eye(4, dtype=float)
+        pose_matrix[:3, 2] = np.array([0.0, 0.0, 1.0])
+        pose_matrix[:3, 3] = np.array([0.0, 0.0, 0.0])
+
+        rvec = np.zeros((3, 1), dtype=float)
+        tvec = np.array([0.0, 0.0, 2.0], dtype=float)
+
+        gaze_offset, distance = compute_gaze_and_pose_diff(
+            pose_matrix, rvec, tvec)
+
+        assert isinstance(gaze_offset, tuple)
+        assert gaze_offset[0] == pytest.approx(0.0, abs=1e-7)
+        assert gaze_offset[1] == pytest.approx(0.0, abs=1e-7)
+        assert distance == pytest.approx(2.0, abs=1e-7)
