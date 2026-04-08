@@ -2,11 +2,27 @@
     "camera" : {
         "index" : 0
     },  
-    "thresholds" : {
-        "ear": 0.20,
-        "mar": 0.60,
-        "gaze_degrees": 20.0,
-        "head_distance_metres" : 0.4
+    "thresholds": {
+        "ear": {
+            "value": 0.20,
+            "alert_limit": 0.5,
+            "decay_rate": 0.1
+        },
+        "mar": {
+            "value": 0.50,
+            "alert_limit": 0.3,
+            "decay_rate": 0.15
+        },
+        "yaw_degrees": {
+            "value": 25.0,
+            "alert_limit": 10.0,
+            "decay_rate": 5.0
+        },
+        "pitch_down_degrees": {
+            "value": -20.0,
+            "decay_rate": 5.0,
+            "alert_limit": 8.0
+        }
     },
     "apriltag" : {
         "family" : "tag36h11",
