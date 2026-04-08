@@ -120,8 +120,7 @@ class TestGaze:
     def test_gaze_offset_positive_pitch_when_forward_points_to_tag_up(self):
         """Should give a positive pitch when head is facing up"""
         pose_matrix = np.eye(4, dtype=float)
-        pose_matrix[:3, 2] = np.array(
-            [0.0, 1.0, 0.0]) 
+        pose_matrix[:3, 2] = np.array([0.0, 1.0, 0.0])
         rvec = np.zeros((3, 1), dtype=float)
 
         result = gaze_offset_degrees(pose_matrix, rvec)
