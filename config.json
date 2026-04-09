@@ -17,7 +17,7 @@
         },
         "pitch_down_degrees": {
             "value": -20.0,
-            "alert_limit": 8.0
+            "decay_rate": 5.0
         }
     },
     "weights": {

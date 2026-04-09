@@ -4,29 +4,37 @@ import datetime as dt
 
 
 config = {
-        "thresholds": {
-            "ear": {
-                "value": 0.20,
-                "alert_limit": 0.5,
-                "decay_rate": 0.1
-            },
-            "mar": {
-                "value": 0.50,
-                "alert_limit": 0.3,
-                "decay_rate": 0.15
-            },
-            "yaw_degrees": {
-                "value": 25.0,
-                "alert_limit": 10.0,
-                "decay_rate": 5.0
-            },
-            "pitch_down_degrees": {
-                "value": -20.0,
-                "decay_rate": 5.0,
-                "alert_limit": 8.0
-            }
+    "thresholds": {
+        "ear": {
+            "value": 0.20,
+            "decay_rate": 0.1
+        },
+        "mar": {
+            "value": 0.50,
+            "decay_rate": 0.15
+        },
+        "yaw_degrees": {
+            "value": 25.0,
+            "decay_rate": 5.0
+        },
+        "pitch_down_degrees": {
+            "value": -20.0,
+            "decay_rate": 5.0
         }
+    },
+    "weights": {
+        "ear": 0.7,
+        "mar": 0.3,
+        "yaw": 0.6,
+        "pitch": 0.4
+    },
+    "alert_limits": {
+        "drowsiness_warning": 0.4,
+        "drowsiness_critical": 1.0,
+        "distraction_warning": 8.0,
+        "distraction_critical": 20.0
     }
+}
 
 
 @pytest.fixture
