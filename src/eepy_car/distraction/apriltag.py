@@ -113,7 +113,7 @@ def estimate_tag_pose(corners: np.ndarray,
 
     ok_pnp, rvec, tvec = cv2.solvePnP(
         object_points, img_points, camera_matrix, dist,
-        flags=cv2.SOLVEPNP_IPPE_SQUARE
+        flags=cv2.SOLVEPNP_ITERATIVE
     )
 
     if not ok_pnp:

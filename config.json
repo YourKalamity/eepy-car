@@ -4,33 +4,33 @@
     },  
     "thresholds": {
         "ear": {
-            "value": 0.20,
+            "value": 0.18,
             "decay_rate": 0.1
         },
         "mar": {
-            "value": 0.50,
+            "value": 0.55,
             "decay_rate": 0.15
         },
         "yaw_degrees": {
-            "value": 25.0,
+            "value": 70.0,
             "decay_rate": 5.0
         },
         "pitch_down_degrees": {
-            "value": -20.0,
+            "value": -18.0,
             "decay_rate": 5.0
         }
     },
     "weights": {
     "ear": 0.7,
     "mar": 0.3,
-    "yaw": 0.6,
-    "pitch": 0.4
+    "yaw": 0.4,
+    "pitch": 0.6
     },
     "alert_limits": {
-        "drowsiness_warning": 0.4,
-        "drowsiness_critical": 1.0,
-        "distraction_warning": 8.0,
-        "distraction_critical": 20.0
+    "drowsiness_warning": 0.4,
+        "drowsiness_critical": 0.75,
+        "distraction_warning": 7.0,
+        "distraction_critical": 15.0
     },
     "cooldown_seconds": 3.0,
     "apriltag" : {
