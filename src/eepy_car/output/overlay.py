@@ -18,7 +18,7 @@ def draw_overlay(frame: np.ndarray,
                  drowsiness_score: float | None,
                  distraction_score: float | None,
                  alert_level: AlertLevel | None,
-                 landmarks: np.ndarray | None,
+                 landmarks: list[tuple[float, float]] | None,
                  found_tags: dict[int, np.ndarray] | None,
                  headrest_tag_rvec: np.ndarray | None,
                  headrest_tag_tvec: np.ndarray | None,
@@ -41,7 +41,7 @@ def draw_overlay(frame: np.ndarray,
         drowsiness_score (float | None): The drowsiness score
         distraction_score (float | None): The distraction score
         alert_level (AlertLevel | None): The current alert level
-        landmarks (np.ndarray | None): The facial landmark points
+        landmarks (list[tuple[float, float]] | None): The facial landmark points
         found_tags (dict[int, np.ndarray] | None): The dictionary of all the found tags
         headrest_tag_rvec (np.ndarray | None): Headrest tags rotation vector
         headrest_tag_tvec (np.ndarray | None): Headrest tags translation vector
@@ -311,24 +311,24 @@ def _draw_alert_level(frame: np.ndarray,
 
 
 def _draw_face_landmarks(frame: np.ndarray,
-                         landmarks: np.ndarray) -> None:
+                         landmarks: list[tuple[float, float]]) -> None:
     """Helper function to draw all 478 face landmarks
 
     Args:
         frame (np.ndarray): The frame to draw on
-        landmarks (np.ndarray): The face landmarks
+        landmarks (list[tuple[float, float]]): The face landmarks
     """
     for (x, y) in landmarks:
         cv2.circle(frame, (int(x), int(y)), 1, (255, 0, 0), -1)
 
 
 def _draw_ear_landmarks(frame: np.ndarray,
-                        landmarks: np.ndarray) -> None:
+                        landmarks: list[tuple[float, float]]) -> None:
     """Helper function to draw EAR landmarks
 
     Args:
         frame (np.ndarray): The frame to draw on
-        landmarks (np.ndarray): The face landmarks
+        landmarks (list[tuple[float, float]]): The face landmarks
     """
     for idx in LEFT_EYE + RIGHT_EYE:
         x, y = int(landmarks[idx][0]), int(landmarks[idx][1])
@@ -336,12 +336,12 @@ def _draw_ear_landmarks(frame: np.ndarray,
 
 
 def _draw_mar_landmarks(frame: np.ndarray,
-                        landmarks: np.ndarray) -> None:
+                        landmarks: list[tuple[float, float]]) -> None:
     """Helper function to draw MAR landmarks
 
     Args:
         frame (np.ndarray): The frame to draw on
-        landmarks (np.ndarray): The face landmarks
+        landmarks (list[tuple[float, float]]): The face landmarks
     """
     for idx in MOUTH:
         x, y = int(landmarks[idx][0]), int(landmarks[idx][1])
