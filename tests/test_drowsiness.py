@@ -121,8 +121,6 @@ class TestFaceFunctions:
     def test_get_landmarks_from_image_file(self, landmarker):
         """Should load image file and return the landmarks and pose matrix"""
         image_path = Path(__file__).parent / "assets" / "images" / "face.png"
-        if not image_path.exists():
-            pytest.skip(f"Missing test image: {image_path}")
 
         image = cv2.imread(str(image_path))
         assert image is not None
