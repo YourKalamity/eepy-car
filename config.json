@@ -42,6 +42,16 @@
         "log_events": true,
         "log_path": "logs/events-{date}.log",
         "show_overlay": true,
+        "overlay": {
+            "show_raw_indicator": true,
+            "show_indicator_score": true,
+            "show_combined_score": true,
+            "show_alert_level": true,
+            "show_face_mesh": false,
+            "show_ear_points": false,
+            "show_mar_points": false,
+            "show_apriltag": false
+        },
         "audio_alert": true
     }
 }
