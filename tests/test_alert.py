@@ -1,5 +1,5 @@
 import pytest
-from eepy_car.alert import DriverState
+from eepy_car.alert import DriverState, AlertLevel, AlertManager
 import datetime as dt
 
 
@@ -25,8 +25,8 @@ config = {
     "weights": {
         "ear": 0.7,
         "mar": 0.3,
-        "yaw": 0.6,
-        "pitch": 0.4
+        "yaw": 0.4,
+        "pitch": 0.6
     },
     "alert_limits": {
         "drowsiness_warning": 0.4,
@@ -113,7 +113,7 @@ class TestDriverState:
 
     def test_update_scores_decays_and_clamps(self, driver_state):
         """Should decay all scores"""
-        base = dt.datetime(2024, 1, 1, 0, 0, 0)
+        base = dt.datetime.now()
         driver_state.last_t = base
         driver_state.ear_score = 1.0
         driver_state.mar_score = 1.0
@@ -207,3 +207,125 @@ class TestDriverState:
         assert driver_state.mar_score == pytest.approx(1.0)
         assert driver_state.yaw_score == pytest.approx(1.0)
         assert driver_state.pitch_score == pytest.approx(1.0)
+
+
+class TestAlertManager:
+    def test_init_sets_defaults(self):
+        """Should return the correct defaults"""
+        events = []
+        manager = AlertManager(config, on_alert=events.append)
+
+        assert manager.current_alert == AlertLevel.NONE
+        assert manager.last_alert_time == dt.datetime.min
+        assert manager.cooldown_seconds == pytest.approx(3.0)
+
+    def test_scores_are_weighted_correctly(self):
+        """Should return correct scores post weights"""
+        manager = AlertManager(config, on_alert=print)
+        state = DriverState(config)
+        state.ear_score = 1.0
+        state.mar_score = 2.0
+        state.yaw_score = 10.0
+        state.pitch_score = 5.0
+
+        assert manager._drowsiness_score(state) == pytest.approx(1.3)
+        assert manager._distraction_score(state) == pytest.approx(7.0)
+
+    def test_evaluate_triggers_drowsiness_warning_and_callback(self):
+        """Should correctly callback function with drowsiness warning"""
+        events = []
+        manager = AlertManager(config, on_alert=events.append)
+        state = DriverState(config)
+        state.ear_score = 1.0
+        state.mar_score = 0.0
+
+        now = dt.datetime.now()
+        level = manager.evaluate(state, now)
+
+        assert level == AlertLevel.DROWSINESS_WARNING
+        assert manager.current_alert == AlertLevel.DROWSINESS_WARNING
+        assert manager.last_alert_time == now
+        assert events == [AlertLevel.DROWSINESS_WARNING]
+
+    def test_cooldown_blocks_alert_change(self):
+        """Should prevent a second alert callback triggering within cooldown"""
+        events = []
+        manager = AlertManager(config, on_alert=events.append)
+        state = DriverState(config)
+
+        base = dt.datetime.now()
+        state.ear_score = 1.0
+        manager.evaluate(state, base)
+
+        state.ear_score = 2.0
+        level = manager.evaluate(state, base + dt.timedelta(seconds=1))
+
+        assert level == AlertLevel.DROWSINESS_WARNING
+        assert events == [AlertLevel.DROWSINESS_WARNING]
+
+    def test_after_cooldown_can_escalate_to_critical(self):
+        """Should correctly alert when alert level increased"""
+        events = []
+        manager = AlertManager(config, on_alert=events.append)
+        state = DriverState(config)
+
+        base = dt.datetime.now()
+        state.ear_score = 1.0
+        manager.evaluate(state, base)
+
+        state.ear_score = 2.0
+        level = manager.evaluate(state, base + dt.timedelta(seconds=4))
+
+        assert level == AlertLevel.CRITICAL_DROWSINESS
+        assert events == [
+            AlertLevel.DROWSINESS_WARNING,
+            AlertLevel.CRITICAL_DROWSINESS,
+        ]
+
+    def test_priority_prefers_critical_drowsiness_over_critical_distraction(self):
+        """Should callback with drowsiness warning over distraction"""
+        events = []
+        manager = AlertManager(config, on_alert=events.append)
+        state = DriverState(config)
+        state.ear_score = 2.0
+        state.mar_score = 2.0
+        state.yaw_score = 100.0
+        state.pitch_score = 100.0
+
+        level = manager.evaluate(state, dt.datetime.now())
+
+        assert level == AlertLevel.CRITICAL_DROWSINESS
+        assert events == [AlertLevel.CRITICAL_DROWSINESS]
+
+    def test_exact_critical_threshold_does_not_trigger_critical(self):
+        """Should not trigger alert when on limit"""
+        events = []
+        manager = AlertManager(config, on_alert=events.append)
+        state = DriverState(config)
+        state.ear_score = 1.0
+        state.mar_score = 1.0
+
+        level = manager.evaluate(state, dt.datetime.now())
+
+        assert level == AlertLevel.DROWSINESS_WARNING
+        assert events == [AlertLevel.DROWSINESS_WARNING]
+
+    def test_zero_scores_reset_alert_to_none_even_during_cooldown(self):
+        """Should callback alert with None"""
+        events = []
+        manager = AlertManager(config, on_alert=events.append)
+        state = DriverState(config)
+
+        base = dt.datetime.now()
+        state.ear_score = 1.0
+        manager.evaluate(state, base)
+        assert manager.current_alert == AlertLevel.DROWSINESS_WARNING
+
+        state.ear_score = 0.0
+        state.mar_score = 0.0
+        state.yaw_score = 0.0
+        state.pitch_score = 0.0
+        level = manager.evaluate(state, base + dt.timedelta(seconds=1))
+
+        assert level == AlertLevel.NONE
+        assert manager.current_alert == AlertLevel.NONE
