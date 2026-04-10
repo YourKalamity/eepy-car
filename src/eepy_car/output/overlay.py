@@ -171,6 +171,19 @@ def _draw_indicator_scores(frame: np.ndarray,
                            mar_score: float | None,
                            yaw_score: float | None,
                            pitch_score: float | None) -> int:
+    """Helper function to draw indicator scores if available
+
+    Args:
+        frame (np.ndarray): The frame to draw on
+        y_start (int): The y position to start writing from
+        ear_score (float | None): The accumulated EAR score
+        mar_score (float | None): The accumulated MAR score
+        yaw_score (float | None): The accumulated yaw score
+        pitch_score (float | None): The accumulated pitch score
+
+    Returns:
+        int: The next y_start value to draw at
+    """
     lines = []
 
     if ear_score is not None:
@@ -211,7 +224,17 @@ def _draw_combined_scores(frame: np.ndarray,
                           y_start: int,
                           drowsiness_score: float | None,
                           distraction_score: float | None) -> int:
+    """Helper function to draw combined scores if available
 
+    Args:
+        frame (np.ndarray): The frame to draw on
+        y_start (int): The y position to start writing from
+        drowsiness_score (float | None): The drowsiness score
+        distraction_score (float | None): The distraction score
+
+    Returns:
+        int: The next y_start value to draw at
+    """
     lines = []
 
     if drowsiness_score is not None:
@@ -241,6 +264,16 @@ def _draw_combined_scores(frame: np.ndarray,
 def _draw_alert_level(frame: np.ndarray,
                       y_start: int,
                       alert_level: AlertLevel) -> int:
+    """Helper function to draw the current AlertLevel
+
+    Args:
+        frame (np.ndarray): The frame to draw on
+        y_start (int): The y position to start writing from
+        alert_level (AlertLevel): The current alert level
+
+    Returns:
+        int: The next y_start value to draw at
+    """
     if alert_level is None or alert_level == AlertLevel.NONE:
         return y_start
 
@@ -279,12 +312,24 @@ def _draw_alert_level(frame: np.ndarray,
 
 def _draw_face_landmarks(frame: np.ndarray,
                          landmarks: np.ndarray) -> None:
+    """Helper function to draw all 478 face landmarks
+
+    Args:
+        frame (np.ndarray): The frame to draw on
+        landmarks (np.ndarray): The face landmarks
+    """
     for (x, y) in landmarks:
         cv2.circle(frame, (int(x), int(y)), 1, (255, 0, 0), -1)
 
 
 def _draw_ear_landmarks(frame: np.ndarray,
                         landmarks: np.ndarray) -> None:
+    """Helper function to draw EAR landmarks
+
+    Args:
+        frame (np.ndarray): The frame to draw on
+        landmarks (np.ndarray): The face landmarks
+    """
     for idx in LEFT_EYE + RIGHT_EYE:
         x, y = int(landmarks[idx][0]), int(landmarks[idx][1])
         cv2.circle(frame, (x, y), 3, (0, 0, 255), -1)
@@ -292,6 +337,12 @@ def _draw_ear_landmarks(frame: np.ndarray,
 
 def _draw_mar_landmarks(frame: np.ndarray,
                         landmarks: np.ndarray) -> None:
+    """Helper function to draw MAR landmarks
+
+    Args:
+        frame (np.ndarray): The frame to draw on
+        landmarks (np.ndarray): The face landmarks
+    """
     for idx in MOUTH:
         x, y = int(landmarks[idx][0]), int(landmarks[idx][1])
         cv2.circle(frame, (x, y), 3, (0, 255, 0), -1)
@@ -299,6 +350,12 @@ def _draw_mar_landmarks(frame: np.ndarray,
 
 def _draw_found_tags(frame: np.ndarray,
                      found_tags: dict[int, np.ndarray]) -> None:
+    """Helper function to draw overays for AprilTags detected as well as ID
+
+    Args:
+        frame (np.ndarray): The frame to draw on
+        found_tags (dict[int, np.ndarray]): The dictionary with all the AprilTags found
+    """
     for tag_id, corners in found_tags.items():
         pts = corners.reshape(4, 2).astype(int)
         cv2.polylines(frame, [pts], True, (0, 255, 0), 2)
@@ -311,6 +368,7 @@ def _draw_found_tags(frame: np.ndarray,
                     cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
 
 
+# These points were defined outside of the function to avoid them being recreated constantly
 _AXIS_PTS = np.array([
     [0, 0, 0],
     [1, 0, 0],
@@ -325,6 +383,16 @@ def _draw_headrest_tag_axes(frame: np.ndarray,
                             camera_matrix: np.ndarray,
                             camera_dist: np.ndarray,
                             config: dict) -> None:
+    """Helper function to draw 3D axes on specified AprilTag
+
+    Args:
+        frame (np.ndarray): The frame to draw on
+        headrest_tag_rvec (np.ndarray | None): Headrest tags rotation vector
+        headrest_tag_tvec (np.ndarray | None): Headrest tags translation vector
+        camera_matrix (np.ndarray | None): Camera matrix from calibration
+        camera_dist (np.ndarray | None): Camera dist from calibration
+        config (dict): Configuration file dictionary
+    """
     length = config["apriltag"]["tag_size_metres"] * 0.6
 
     projected, _ = cv2.projectPoints(_AXIS_PTS * length,
