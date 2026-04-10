@@ -6,6 +6,7 @@ import pytest
 from eepy_car.drowsiness.face import load_landmarker_model, get_face_data
 from eepy_car.drowsiness.ear import LEFT_EYE, ear, avg_ear
 from eepy_car.drowsiness.mar import mar
+import cv2
 
 MODEL_PATH = Path(__file__).parent.parent / "models" / "face_landmarker.task"
 
@@ -117,7 +118,18 @@ class TestFaceFunctions:
         result = get_face_data(landmarker, blank_frame)
         assert result == (None, None)
 
-    # TODO Add test cases for actual face scanning
+    def test_get_landmarks_from_image_file(self, landmarker):
+        """Should load image file and return the landmarks and pose matrix"""
+        image_path = Path(__file__).parent / "assets" / "images" / "face.png"
+        if not image_path.exists():
+            pytest.skip(f"Missing test image: {image_path}")
+
+        image = cv2.imread(str(image_path))
+        assert image is not None
+
+        landmarks, pose_matrix = get_face_data(landmarker, image)
+        assert landmarks is not None and len(landmarks) == 478
+        assert pose_matrix is not None
 
 
 class TestEAR:
