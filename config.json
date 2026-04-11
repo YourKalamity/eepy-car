@@ -47,11 +47,17 @@
             "show_indicator_score": true,
             "show_combined_score": true,
             "show_alert_level": true,
-            "show_face_mesh": false,
+            "show_face_mesh": true,
             "show_ear_points": false,
             "show_mar_points": false,
             "show_apriltag": false
         },
         "audio_alert": true
+    },
+    "model": {
+        "path": "models/face_landmarker.task"
+    },
+    "calibration": {
+        "path": "calibration_output/calibration.npz"
     }
 }
