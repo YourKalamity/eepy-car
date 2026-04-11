@@ -49,18 +49,11 @@ def draw_overlay(frame: np.ndarray,
         camera_dist (np.ndarray | None): Camera dist from calibration
         config (dict): Configuration file dictionary
     """
-    y_start = 30
-    y_start = _draw_indicator_values(frame,
-                                     y_start,
-                                     ear_value,
-                                     mar_value,
-                                     yaw_value,
-                                     pitch_value)
 
     overlay_cfg = config["output"]["overlay"]
     y_start = 30
 
-    if overlay_cfg.get("show_indicator_values"):
+    if overlay_cfg.get("show_raw_indicator"):
         y_start = _draw_indicator_values(frame,
                                          y_start,
                                          ear_value,
@@ -68,7 +61,7 @@ def draw_overlay(frame: np.ndarray,
                                          yaw_value,
                                          pitch_value)
 
-    if overlay_cfg.get("show_indicator_scores"):
+    if overlay_cfg.get("show_indicator_score"):
         y_start = _draw_indicator_scores(frame,
                                          y_start,
                                          ear_score,
@@ -76,7 +69,7 @@ def draw_overlay(frame: np.ndarray,
                                          yaw_score,
                                          pitch_score)
 
-    if overlay_cfg.get("show_combined_scores"):
+    if overlay_cfg.get("show_combined_score"):
         y_start = _draw_combined_scores(frame,
                                         y_start,
                                         drowsiness_score,
