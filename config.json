@@ -12,7 +12,7 @@
             "decay_rate": 0.15
         },
         "yaw_degrees": {
-            "value": 70.0,
+            "value": 60.0,
             "decay_rate": 5.0
         },
         "pitch_down_degrees": {
