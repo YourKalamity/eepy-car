@@ -18,12 +18,13 @@ class DriverState:
         self.last_t = dt.datetime.now()
 
     def update_scores(self,
-                      ear: float,
-                      mar: float,
-                      yaw: float,
-                      pitch: float,
+                      ear: float | None,
+                      mar: float | None,
+                      yaw: float | None,
+                      pitch: float | None,
                       current_t: dt.datetime) -> None:
         """Function that takes in the values of the driver's current state and updates the scores
+        If data passed is None, then it decays that value safely
 
         Args:
             ear (float): Eye aspect ratio value
@@ -34,22 +35,38 @@ class DriverState:
         """
         t_delta = (current_t - self.last_t).total_seconds()
 
-        self.ear_score = self.accumulate_when_below(self.ear_score,
-                                                    ear,
-                                                    self.thresholds["ear"],
-                                                    t_delta)
-        self.mar_score = self.accumulate_when_above(self.mar_score,
-                                                    mar,
-                                                    self.thresholds["mar"],
-                                                    t_delta)
-        self.yaw_score = self.accumulate_when_above(self.yaw_score,
-                                                    abs(yaw),
-                                                    self.thresholds["yaw_degrees"],
-                                                    t_delta)
-        self.pitch_score = self.accumulate_when_below(self.pitch_score,
-                                                      pitch,
-                                                      self.thresholds["pitch_down_degrees"],
-                                                      t_delta)
+        if ear is not None:
+            self.ear_score = self.accumulate_when_below(self.ear_score,
+                                                        ear,
+                                                        self.thresholds["ear"],
+                                                        t_delta)
+        else:
+            self.ear_score = max(0.0, self.ear_score - self.thresholds["ear"]["decay_rate"] * t_delta)
+
+        if mar is not None:
+            self.mar_score = self.accumulate_when_above(self.mar_score,
+                                                        mar,
+                                                        self.thresholds["mar"],
+                                                        t_delta)
+        else:
+            self.mar_score = max(0.0, self.mar_score - self.thresholds["mar"]["decay_rate"] * t_delta)
+
+        if yaw is not None:
+            self.yaw_score = self.accumulate_when_above(self.yaw_score,
+                                                        abs(yaw),
+                                                        self.thresholds["yaw_degrees"],
+                                                        t_delta)
+        else:
+            self.yaw_score = max(0.0, self.yaw_score - self.thresholds["yaw_degrees"]["decay_rate"] * t_delta)
+
+        if pitch is not None:
+            self.pitch_score = self.accumulate_when_below(self.pitch_score,
+                                                          pitch,
+                                                          self.thresholds["pitch_down_degrees"],
+                                                          t_delta)
+        else:
+            self.pitch_score = max(0.0, self.pitch_score - self.thresholds["pitch_down_degrees"]["decay_rate"] * t_delta)
+
         self.last_t = current_t
 
     def accumulate_when_below(self,
