@@ -34,7 +34,6 @@ class DriverState:
             current_t (dt.datetime): The current time
         """
         t_delta = (current_t - self.last_t).total_seconds()
-
         if ear is not None:
             self.ear_score = self.accumulate_when_below(self.ear_score,
                                                         ear,

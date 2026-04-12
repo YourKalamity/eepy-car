@@ -2,6 +2,9 @@ import concurrent.futures
 import datetime as dt
 import sys
 import time
+import argparse
+from pathlib import Path
+import logging
 
 import cv2
 import numpy as np
@@ -21,6 +24,24 @@ from eepy_car.drowsiness import avg_ear, get_face_data, load_landmarker_model, m
 from eepy_car.output.audio import play_alert
 from eepy_car.output.logger import log_alert, setup_logger
 from eepy_car.output.overlay import draw_overlay
+
+
+def parse_args() -> argparse.Namespace:
+    """Parses command line arguments.
+
+    Returns:
+        argparse.Namespace: Parsed arguments.
+    """
+    parser = argparse.ArgumentParser(
+        description="eepy-car driver monitoring system")
+    parser.add_argument(
+        "--evaluate",
+        type=str,
+        default=None,
+        metavar="PATH",
+        help="Path to a folder of video files to evaluate in sequence",
+    )
+    return parser.parse_args()
 
 
 def preflight_checks(config: dict) -> None:
@@ -58,7 +79,7 @@ def process_face_branch(face_landmarker,
         frame (np.ndarray): A single BGR frame from OpenCV.
 
     Returns:
-        tuple[list[tuple[float, float]] | None, np.ndarray | None, float | None, float | None]: 
+        tuple[list[tuple[float, float]] | None, np.ndarray | None, float | None, float | None]:
             landmarks, pose_matrix, ear_value, mar_value
 
     """
@@ -107,10 +128,12 @@ def process_tag_branch(tag_detector: cv2.aruco.ArucoDetector,
     return found_tags, tag_pose
 
 
-def main() -> int:
+def main(current_file: str | None = None) -> int:
     # Load config
     try:
         config = load_config("config.json")
+        if current_file is not None:
+            config["camera"]["index"] = current_file
     except FileNotFoundError as e:
         print(f"Error: {e}", file=sys.stderr)
         return 1
@@ -126,6 +149,15 @@ def main() -> int:
     logger = setup_logger(
         config["output"]["log_path"],
     )
+
+    eval_logger = logging.getLogger("eepy_car_eval")
+    eval_logger.setLevel(logging.INFO)
+    if not eval_logger.handlers:
+        handler = logging.FileHandler("logs/dataset")
+        handler.setFormatter(logging.Formatter("%(asctime)s | %(message)s",
+                                               datefmt="%Y-%m-%d %H:%M:%S"))
+        eval_logger.addHandler(handler)
+
     logger.info("eepy-car starting up")
     logger.info(f"Config values: {config}")
 
@@ -138,14 +170,17 @@ def main() -> int:
     tag_objp = tag_object_points(config["apriltag"]["tag_size_metres"])
 
     logger.info("Loading camera calibration...")
-    camera_matrix, camera_dist = load_camera_calibration(config["calibration"]["path"])
+    camera_matrix, camera_dist = load_camera_calibration(
+        config["calibration"]["path"])
 
     # Create alert system
     driver_state = DriverState(config)
 
     def on_alert(level: AlertLevel) -> None:
         log_alert(logger, level)
-        if config["output"].get("audio_alert"):
+        if eval_logger is not None and current_file is not None:
+            eval_logger.info(f"{current_file} | {level.name}")
+        if config["output"].get("audio_alert") and current_file is None:
             play_alert(level, config)
 
     alert_manager = AlertManager(config, on_alert=on_alert)
@@ -170,7 +205,8 @@ def main() -> int:
                     if ok and frame is not None:
                         logger.info("Camera ready")
                         break
-                    logger.debug(f"Waiting for camera... attempt {attempt + 1}/{max_warmup_attempts}")
+                    logger.debug(
+                        f"Waiting for camera... attempt {attempt + 1}/{max_warmup_attempts}")
                     time.sleep(0.01)
                 else:
                     logger.error(
@@ -179,18 +215,37 @@ def main() -> int:
                         "Check your camera connection and try again."
                     )
                     return 1
-                
+                is_video_file = current_file is not None
+                time_step: dt.timedelta = dt.timedelta(0)
+                simulated_now: dt.datetime = dt.datetime.now()
+                if is_video_file:
+                    video_fps = cap.get(cv2.CAP_PROP_FPS)
+                    if video_fps <= 0:
+                        video_fps = 30.0
+                    time_step = dt.timedelta(seconds=1.0 / video_fps)
+                    simulated_now = dt.datetime.now()
+                    logger.info(
+                        f"Video file detected ({video_fps} FPS). Using simulated clock for accurate accumulation.")
                 while True:
                     ok, frame = cap.read()
                     if not ok:
-                        logger.error("Failed to read frame from camera")
+                        # For video files, 'not ok' means the video naturally ended!
+                        if is_video_file:
+                            logger.info(f"End of video file: {current_file}")
+                        else:
+                            logger.error("Failed to read frame from camera")
                         break
 
-                    now = dt.datetime.now()
+                    if is_video_file:
+                        simulated_now += time_step
+                        now = simulated_now
+                    else:
+                        now = dt.datetime.now()
 
                     # Run both detection branches concurrently
                     # Face Detection
-                    future_face = executor.submit(process_face_branch, face_landmarker, frame)
+                    future_face = executor.submit(
+                        process_face_branch, face_landmarker, frame)
                     # AprilTag Detection
                     future_tags = executor.submit(
                         process_tag_branch,
@@ -211,7 +266,8 @@ def main() -> int:
                         last_known_rvec, last_known_tvec = tag_pose
                         if not tag_found:
                             tag_found = True
-                            logger.info("Headrest tag found: Driver can now sit down.")
+                            logger.info(
+                                "Headrest tag found: Driver can now sit down.")
 
                     yaw_value = None
                     pitch_value = None
@@ -226,7 +282,8 @@ def main() -> int:
                             yaw_value, pitch_value = gaze
 
                     # Update scores
-                    driver_state.update_scores(ear_value, mar_value, yaw_value, pitch_value, now)
+                    driver_state.update_scores(
+                        ear_value, mar_value, yaw_value, pitch_value, now)
 
                     # Alert level evaluation
                     alert_level = alert_manager.evaluate(driver_state, now)
@@ -243,8 +300,10 @@ def main() -> int:
                             mar_score=driver_state.mar_score,
                             yaw_score=driver_state.yaw_score,
                             pitch_score=driver_state.pitch_score,
-                            drowsiness_score=alert_manager._drowsiness_score(driver_state),
-                            distraction_score=alert_manager._distraction_score(driver_state),
+                            drowsiness_score=alert_manager._drowsiness_score(
+                                driver_state),
+                            distraction_score=alert_manager._distraction_score(
+                                driver_state),
                             alert_level=alert_level,
                             landmarks=landmarks,
                             found_tags=found_tags,
@@ -269,4 +328,24 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    args = parse_args()
+
+    if args.evaluate is not None:
+        evaluate_dir = Path(args.evaluate)
+        video_files = sorted(evaluate_dir.glob("*"))
+        video_files = [f for f in video_files if f.suffix.lower() in (
+            ".mp4", ".avi", ".mov", ".mkv")]
+
+        if not video_files:
+            print(f"No video files found in {evaluate_dir}", file=sys.stderr)
+            raise SystemExit(1)
+
+        for video_file in video_files:
+            print(f"\nEvaluating: {video_file.name}")
+            result = main(current_file=str(video_file))
+            if result != 0:
+                print(f"Error processing {video_file.name}", file=sys.stderr)
+
+        raise SystemExit(0)
+    else:
+        raise SystemExit(main())
