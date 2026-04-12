@@ -59,8 +59,6 @@ Print or 3D-print an AprilTag from the `tag36h11` family with ID `250`. Affix it
 
 The tag only needs to be visible at system startup. Once the pose is acquired, the driver's head can occlude it — the last known pose remains valid for the entire session.
 
-> **Tip:** 3D-printing in matte PLA produces a rigid, non-reflective tag that detects significantly more reliably than paper prints.
-
 ---
 
 ## Configuration

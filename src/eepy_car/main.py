@@ -1,6 +1,7 @@
 import concurrent.futures
 import datetime as dt
 import sys
+import time
 
 import cv2
 import numpy as np
@@ -170,7 +171,7 @@ def main() -> int:
                         logger.info("Camera ready")
                         break
                     logger.debug(f"Waiting for camera... attempt {attempt + 1}/{max_warmup_attempts}")
-                    cv2.waitKey(100)
+                    time.sleep(0.01)
                 else:
                     logger.error(
                         "Camera failed to produce a frame after "
