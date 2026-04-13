@@ -322,7 +322,7 @@ def main(current_file: str | None = None) -> int:
                             config=config,
                         )
 
-                    if len(fps_times) == 30:
+                    if len(fps_times) == 30 and config["output"]["profile"] is True:
                         process = psutil.Process(os.getpid())
                         cpu_percent = psutil.cpu_percent(interval=None)
                         ram_mb = process.memory_info().rss / 1024 / 1024
