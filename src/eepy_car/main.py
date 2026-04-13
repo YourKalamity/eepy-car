@@ -178,13 +178,16 @@ def main(current_file: str | None = None) -> int:
 
     # Create alert system
     driver_state = DriverState(config)
+    current_alert = AlertLevel.NONE
 
     def on_alert(level: AlertLevel) -> None:
+        nonlocal current_alert
         log_alert(logger, level)
         if eval_logger is not None and current_file is not None:
             eval_logger.info(f"{current_file} | {level.name}")
         if config["output"].get("audio_alert") and current_file is None:
-            play_alert(level, config)
+            play_alert(level, current_alert, config)
+            current_alert = level
 
     alert_manager = AlertManager(config, on_alert=on_alert)
 
@@ -247,7 +250,9 @@ def main(current_file: str | None = None) -> int:
                         now = dt.datetime.now()
 
                     fps_times.append(now.timestamp())
-                    fps = (len(fps_times) - 1) / (fps_times[-1] - fps_times[0]) if len(fps_times) >= 2 else 0.0
+                    fps = (len(fps_times) - 1) / \
+                        (fps_times[-1] - fps_times[0]
+                         ) if len(fps_times) >= 2 else 0.0
 
                     # Run both detection branches concurrently
                     # Face Detection
@@ -326,7 +331,8 @@ def main(current_file: str | None = None) -> int:
                         process = psutil.Process(os.getpid())
                         cpu_percent = psutil.cpu_percent(interval=None)
                         ram_mb = process.memory_info().rss / 1024 / 1024
-                        logger.info(f"FPS: {fps:.1f} | CPU: {cpu_percent:.1f}% | RAM: {ram_mb:.1f} MB")
+                        logger.info(
+                            f"FPS: {fps:.1f} | CPU: {cpu_percent:.1f}% | RAM: {ram_mb:.1f} MB")
 
                     cv2.imshow("eepy-car", frame)
                     if cv2.waitKey(1) & 0xFF in (27, ord("q")):

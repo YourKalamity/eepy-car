@@ -13,14 +13,21 @@ _AUDIO_KEYS = {
 }
 
 
-def play_alert(alert_level: AlertLevel, config: dict) -> None:
+def play_alert(alert_level: AlertLevel, prev_alert_level: AlertLevel, config: dict) -> None:
     """Plays the audio alert for the given alert level in a daemon thread.
 
     Args:
         alert_level (AlertLevel): The alert level to play audio for.
+        prev_alert_level (AlertLevel): The previous alert level to prevent alerts when alert level downgraded.
         config (dict): The configuration dictionary.
     """
     if not config["output"].get("audio_alert", False):
+        return
+
+    if alert_level is AlertLevel.DROWSINESS_WARNING and prev_alert_level is AlertLevel.CRITICAL_DROWSINESS:
+        return
+
+    if alert_level is AlertLevel.DISTRACTION_WARNING and prev_alert_level is AlertLevel.CRITICAL_DISTRACTION:
         return
 
     key = _AUDIO_KEYS.get(alert_level)
