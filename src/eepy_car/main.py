@@ -5,9 +5,12 @@ import time
 import argparse
 from pathlib import Path
 import logging
+import collections
+import os
 
 import cv2
 import numpy as np
+import psutil
 
 from eepy_car.alert import AlertLevel, AlertManager, DriverState
 from eepy_car.capture import CaptureManager
@@ -190,6 +193,7 @@ def main(current_file: str | None = None) -> int:
     last_known_tvec = None
     tag_found = False
     logger.info("Opening camera...")
+    fps_times = collections.deque(maxlen=30)
 
     try:
         with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
@@ -241,6 +245,9 @@ def main(current_file: str | None = None) -> int:
                         now = simulated_now
                     else:
                         now = dt.datetime.now()
+
+                    fps_times.append(now.timestamp())
+                    fps = (len(fps_times) - 1) / (fps_times[-1] - fps_times[0]) if len(fps_times) >= 2 else 0.0
 
                     # Run both detection branches concurrently
                     # Face Detection
@@ -311,8 +318,15 @@ def main(current_file: str | None = None) -> int:
                             headrest_tag_tvec=last_known_tvec,
                             camera_matrix=camera_matrix,
                             camera_dist=camera_dist,
+                            fps=fps,
                             config=config,
                         )
+
+                    if len(fps_times) == 30:
+                        process = psutil.Process(os.getpid())
+                        cpu_percent = psutil.cpu_percent(interval=None)
+                        ram_mb = process.memory_info().rss / 1024 / 1024
+                        logger.info(f"FPS: {fps:.1f} | CPU: {cpu_percent:.1f}% | RAM: {ram_mb:.1f} MB")
 
                     cv2.imshow("eepy-car", frame)
                     if cv2.waitKey(1) & 0xFF in (27, ord("q")):

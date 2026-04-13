@@ -8,6 +8,7 @@ dependencies = [
     "mediapipe>=0.10.31",
     "numpy>=2.4.0",
     "opencv-python>=4.13.0.90",
+    "psutil>=7.2.2",
     "pytest>=8.4.2",
     "sounddevice>=0.5.3",
     "soundfile>=0.13.1",

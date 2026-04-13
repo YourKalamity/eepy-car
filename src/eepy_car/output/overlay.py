@@ -24,6 +24,7 @@ def draw_overlay(frame: np.ndarray,
                  headrest_tag_tvec: np.ndarray | None,
                  camera_matrix: np.ndarray | None,
                  camera_dist: np.ndarray | None,
+                 fps: float | None,
                  config: dict) -> None:
     """Overlay drawer that calls helper functions depending on config values
     Handles None values by either not drawing or displaying N / A
@@ -101,6 +102,9 @@ def draw_overlay(frame: np.ndarray,
                                 camera_matrix,
                                 camera_dist,
                                 config)
+    
+    if fps is not None:
+        _draw_fps(frame, fps)
 
 
 def _draw_indicator_values(frame: np.ndarray,
@@ -401,3 +405,24 @@ def _draw_headrest_tag_axes(frame: np.ndarray,
     cv2.line(frame, origin, pts[1], (0, 0, 255), 3)
     cv2.line(frame, origin, pts[2], (0, 255, 0), 3)
     cv2.line(frame, origin, pts[3], (255, 0, 0), 3)
+
+
+def _draw_fps(frame: np.ndarray, fps: float) -> None:
+    """Helper function to draw FPS
+
+    Args:
+        frame (np.ndarray): The frame to draw on
+        fps (float): The current FPS
+    """
+    text = f"FPS: {fps:.1f}"
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    scale = 0.7
+    thickness = 2
+    color = (0, 255, 0)
+
+    (text_w, text_h), baseline = cv2.getTextSize(text, font, scale, thickness)
+    margin = 10
+    x = frame.shape[1] - text_w - margin
+    y = text_h + margin
+
+    cv2.putText(frame, text, (x, y), font, scale, color, thickness, cv2.LINE_AA)
