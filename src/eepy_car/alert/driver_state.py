@@ -110,7 +110,7 @@ class DriverState:
         """
         threshold = threshold_dict["value"]
         decay = threshold_dict["decay_rate"]
-        severity = max(0.0, (value - threshold) / threshold)
+        severity = max(0.0, (value - threshold) / abs(threshold))
 
         current_score += severity * t_delta
         current_score -= decay * t_delta

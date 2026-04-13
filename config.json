@@ -13,11 +13,11 @@
         },
         "yaw_degrees": {
             "value": 60.0,
-            "decay_rate": 5.0
+            "decay_rate": 0.05
         },
         "pitch_down_degrees": {
-            "value": -18.0,
-            "decay_rate": 5.0
+            "value": 18.0,
+            "decay_rate": 0.05
         }
     },
     "weights": {
@@ -29,8 +29,8 @@
     "alert_limits": {
         "drowsiness_warning": 0.15,
         "drowsiness_critical": 0.35,
-        "distraction_warning": 7.0,
-        "distraction_critical": 15.0
+        "distraction_warning": 0.3,
+        "distraction_critical": 0.7
     },
     "cooldown_seconds": 3.0,
     "apriltag" : {
