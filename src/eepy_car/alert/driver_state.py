@@ -86,10 +86,11 @@ class DriverState:
         """
         threshold = threshold_dict["value"]
         decay = threshold_dict["decay_rate"]
-        if value < threshold:
-            return current_score + ((threshold - value) * t_delta)
+        severity = max(0.0, (threshold - value) / threshold)
+        current_score += severity * t_delta
+        current_score -= decay * t_delta
 
-        return max(0.0, current_score - decay * t_delta)
+        return max(0.0, min(current_score, 1.5))
 
     def accumulate_when_above(self,
                               current_score: float,
@@ -109,7 +110,9 @@ class DriverState:
         """
         threshold = threshold_dict["value"]
         decay = threshold_dict["decay_rate"]
-        if value > threshold:
-            return current_score + (value - threshold) * t_delta
+        severity = max(0.0, (value - threshold) / threshold)
 
-        return max(0.0, current_score - decay * t_delta)
+        current_score += severity * t_delta
+        current_score -= decay * t_delta
+
+        return max(0.0, min(current_score, 1.5))

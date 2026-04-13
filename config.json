@@ -4,7 +4,7 @@
     },  
     "thresholds": {
         "ear": {
-            "value": 0.18,
+            "value": 0.21,
             "decay_rate": 0.1
         },
         "mar": {
@@ -27,8 +27,8 @@
     "pitch": 0.6
     },
     "alert_limits": {
-    "drowsiness_warning": 0.4,
-        "drowsiness_critical": 0.75,
+        "drowsiness_warning": 0.15,
+        "drowsiness_critical": 0.35,
         "distraction_warning": 7.0,
         "distraction_critical": 15.0
     },
