@@ -42,6 +42,7 @@
         "log_events": true,
         "log_path": "logs/events-{date}.log",
         "show_overlay": true,
+        "profile": false,
         "overlay": {
             "show_raw_indicator": true,
             "show_indicator_score": true,
