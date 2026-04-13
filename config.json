@@ -53,7 +53,13 @@
             "show_mar_points": true,
             "show_apriltag": true
         },
-        "audio_alert": true
+        "audio_alert": true,
+        "audio": {
+            "drowsiness_warning": "audio/drowsiness-warning.wav",
+            "drowsiness_critical": "audio/drowsiness-critical.wav",
+            "distraction_warning": "audio/distraction-warning.wav",
+            "distraction_critical": "audio/distraction-critical.wav"
+        }
     },
     "model": {
         "path": "models/face_landmarker.task"
