@@ -26,7 +26,7 @@ def gaze_offset_degrees(pose_matrix: np.ndarray, rvec: np.ndarray,) -> tuple[flo
     tag_up = tag_rotation[:3, 1]
 
     yaw = float(np.degrees(np.arcsin(np.clip(np.dot(head_forward_normalised, tag_right), -1.0, 1.0))))
-    pitch = float(np.degrees(np.arcsin(np.clip(np.dot(head_forward_normalised, tag_up), -1.0, 1.0))))
+    pitch = -float(np.degrees(np.arcsin(np.clip(np.dot(head_forward_normalised, tag_up), -1.0, 1.0))))
 
     return yaw, pitch
 

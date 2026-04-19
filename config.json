@@ -5,7 +5,7 @@
     "thresholds": {
         "ear": {
             "value": 0.21,
-            "decay_rate": 0.1
+            "decay_rate": 0.5
         },
         "mar": {
             "value": 0.55,
@@ -13,11 +13,11 @@
         },
         "yaw_degrees": {
             "value": 60.0,
-            "decay_rate": 0.05
+            "decay_rate": 0.04
         },
         "pitch_down_degrees": {
-            "value": 18.0,
-            "decay_rate": 0.05
+            "value": -18.0,
+            "decay_rate": 0.2
         }
     },
     "weights": {
