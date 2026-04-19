@@ -21,10 +21,10 @@
         }
     },
     "weights": {
-    "ear": 0.6,
-    "mar": 0.4,
-    "yaw": 0.4,
-    "pitch": 0.6
+        "ear": 0.6,
+        "mar": 0.4,
+        "yaw": 0.4,
+        "pitch": 0.6
     },
     "alert_limits": {
         "drowsiness_warning": 0.15,

@@ -117,8 +117,8 @@ class TestGaze:
             assert yaw == pytest.approx(90.0, abs=1e-6)
             assert pitch == pytest.approx(0.0, abs=1e-6)
 
-    def test_gaze_offset_positive_pitch_when_forward_points_to_tag_up(self):
-        """Should give a positive pitch when head is facing up"""
+    def test_gaze_offset_negative_pitch_when_forward_points_to_tag_up(self):
+        """Should give a negative pitch when head is facing up (down-is-positive convention)"""
         pose_matrix = np.eye(4, dtype=float)
         pose_matrix[:3, 2] = np.array([0.0, 1.0, 0.0])
         rvec = np.zeros((3, 1), dtype=float)
@@ -127,7 +127,7 @@ class TestGaze:
         if result is not None:
             yaw, pitch = result
             assert yaw == pytest.approx(0.0, abs=1e-6)
-            assert pitch == pytest.approx(90.0, abs=1e-6)
+            assert pitch == pytest.approx(-90.0, abs=1e-6)
 
     def test_head_tag_distance_computes_euclidean_distance(self):
         """Should calculate the correct distance between head and tag"""

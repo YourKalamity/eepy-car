@@ -6,25 +6,25 @@ import datetime as dt
 config = {
     "thresholds": {
         "ear": {
-            "value": 0.20,
-            "decay_rate": 0.1
+            "value": 0.21,
+            "decay_rate": 0.5
         },
         "mar": {
-            "value": 0.50,
+            "value": 0.55,
             "decay_rate": 0.15
         },
         "yaw_degrees": {
-            "value": 25.0,
-            "decay_rate": 5.0
+            "value": 60.0,
+            "decay_rate": 0.04
         },
         "pitch_down_degrees": {
-            "value": -20.0,
-            "decay_rate": 5.0
+            "value": -18.0,
+            "decay_rate": 0.2
         }
     },
     "weights": {
-        "ear": 0.7,
-        "mar": 0.3,
+        "ear": 0.6,
+        "mar": 0.4,
         "yaw": 0.4,
         "pitch": 0.6
     },
@@ -53,14 +53,14 @@ class TestDriverState:
         assert state.thresholds == config["thresholds"]
 
     def test_accumulate_when_below_accumulates(self, driver_state):
-        """Should correctly accumulate the score when the value is below threshold"""
         result = driver_state.accumulate_when_below(
-            current_score=1.0,
-            value=0.10,
+            current_score=0.1,
+            value=0.00,
             threshold_dict=driver_state.thresholds["ear"],
-            t_delta=2.0,
+            t_delta=1.0,
         )
-        assert result == pytest.approx(1.2)
+
+        assert result == pytest.approx(0.6)
 
     def test_accumulate_when_below_decays_and_clamps_to_zero(self, driver_state):
         """Should correctly decay the score down to 0 when value is above threshold"""
@@ -76,11 +76,12 @@ class TestDriverState:
         """Should correctly accumulate when value is above threshold"""
         result = driver_state.accumulate_when_above(
             current_score=0.5,
-            value=0.80,
+            value=1.10,
             threshold_dict=driver_state.thresholds["mar"],
             t_delta=2.0,
         )
-        assert result == pytest.approx(1.1)
+
+        assert result == pytest.approx(1.5)
 
     def test_accumulate_when_above_decays_and_clamps_to_zero(self, driver_state):
         """Should correctly decay to 0 when value below threshold"""
@@ -93,23 +94,22 @@ class TestDriverState:
         assert result == pytest.approx(0.0)
 
     def test_update_scores_accumulates_all_metrics(self, driver_state):
-        """Should accumulate all scores"""
         base = dt.datetime.now()
         driver_state.last_t = base
         current_t = base + dt.timedelta(seconds=2)
 
         driver_state.update_scores(
-            ear=0.10,
-            mar=0.80,
-            yaw=30.0,
-            pitch=-30.0,
+            ear=0.00,
+            mar=1.10,
+            yaw=120.0,
+            pitch=-36.0,
             current_t=current_t,
         )
 
-        assert driver_state.ear_score == pytest.approx(0.2)
-        assert driver_state.mar_score == pytest.approx(0.6)
-        assert driver_state.yaw_score == pytest.approx(10.0)
-        assert driver_state.pitch_score == pytest.approx(20.0)
+        assert driver_state.ear_score == pytest.approx(1.0)
+        assert driver_state.mar_score == pytest.approx(1.5)
+        assert driver_state.yaw_score == pytest.approx(1.5)
+        assert driver_state.pitch_score == pytest.approx(1.5)
 
     def test_update_scores_decays_and_clamps(self, driver_state):
         """Should decay all scores"""
@@ -128,10 +128,10 @@ class TestDriverState:
             current_t=base + dt.timedelta(seconds=3),
         )
 
-        assert driver_state.ear_score == pytest.approx(0.7)
+        assert driver_state.ear_score == pytest.approx(0.0)
         assert driver_state.mar_score == pytest.approx(0.55)
-        assert driver_state.yaw_score == pytest.approx(0.0)
-        assert driver_state.pitch_score == pytest.approx(0.0)
+        assert driver_state.yaw_score == pytest.approx(0.88)
+        assert driver_state.pitch_score == pytest.approx(0.4)
 
     def test_update_scores_uses_absolute_yaw(self, driver_state):
         """Should corretly correct yaw to positive value"""
@@ -141,34 +141,33 @@ class TestDriverState:
         driver_state.update_scores(
             ear=0.30,
             mar=0.40,
-            yaw=-30.0,
+            yaw=-150.0,
             pitch=-10.0,
             current_t=base + dt.timedelta(seconds=1),
         )
 
-        assert driver_state.yaw_score == pytest.approx(5.0)
+        assert driver_state.yaw_score == pytest.approx(1.46)
 
     def test_update_scores_equal_to_threshold_decays_not_accumulates(self, driver_state):
-        """Should decay scores at threshold"""
         base = dt.datetime.now()
         driver_state.last_t = base
         driver_state.ear_score = 1.0
         driver_state.mar_score = 1.0
-        driver_state.yaw_score = 20.0
-        driver_state.pitch_score = 20.0
+        driver_state.yaw_score = 1.0
+        driver_state.pitch_score = 1.0
 
         driver_state.update_scores(
-            ear=0.20,
-            mar=0.50,
-            yaw=25.0,
-            pitch=-20.0,
+            ear=0.21,
+            mar=0.55,
+            yaw=60.0,
+            pitch=-18.0,
             current_t=base + dt.timedelta(seconds=2),
         )
 
-        assert driver_state.ear_score == pytest.approx(0.8)
+        assert driver_state.ear_score == pytest.approx(0.0)
         assert driver_state.mar_score == pytest.approx(0.7)
-        assert driver_state.yaw_score == pytest.approx(10.0)
-        assert driver_state.pitch_score == pytest.approx(10.0)
+        assert driver_state.yaw_score == pytest.approx(0.92)
+        assert driver_state.pitch_score == pytest.approx(0.6)
 
     def test_update_scores_updates_last_t(self, driver_state):
         """Should update the last time with current time"""
@@ -228,7 +227,7 @@ class TestAlertManager:
         state.yaw_score = 10.0
         state.pitch_score = 5.0
 
-        assert manager._drowsiness_score(state) == pytest.approx(1.3)
+        assert manager._drowsiness_score(state) == pytest.approx(1.4)
         assert manager._distraction_score(state) == pytest.approx(7.0)
 
     def test_evaluate_triggers_drowsiness_warning_and_callback(self):
